@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>MIDI Player Seek & Visualizer Update Test</title>
+
+    <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.0/es6/core.js"></script>
+    <script src="./dist/midi-player.min.js"></script>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .test-section {
+        margin-bottom: 30px;
+        border: 2px solid #0066cc;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+      }
+      h2 {
+        margin-top: 0;
+        color: #0066cc;
+        border-bottom: 2px solid #0066cc;
+        padding-bottom: 10px;
+      }
+      .info {
+        background-color: #e6f2ff;
+        padding: 15px;
+        border-left: 4px solid #0066cc;
+        border-radius: 3px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .debug-log {
+        background-color: #1e1e1e;
+        color: #00ff00;
+        padding: 10px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        height: 250px;
+        overflow-y: auto;
+        margin-top: 10px;
+        border: 1px solid #333;
+      }
+      .debug-log > div {
+        margin: 2px 0;
+      }
+      midi-player {
+        display: block;
+        margin: 15px 0;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: white;
+      }
+      midi-visualizer {
+        display: block;
+        margin: 15px 0;
+        background-color: #f5f5f5;
+        border-radius: 3px;
+        border: 1px solid #ddd;
+        min-height: 200px;
+      }
+      .status {
+        font-weight: bold;
+        color: #0066cc;
+        margin-top: 10px;
+        font-size: 16px;
+      }
+      .test-instructions {
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-size: 14px;
+      }
+      .event-log {
+        display: flex;
+        gap: 20px;
+        margin: 15px 0;
+      }
+      .event-log-item {
+        flex: 1;
+        background-color: white;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 4px;
+      }
+      .event-log-item h3 {
+        margin: 0 0 8px 0;
+        font-size: 13px;
+        color: #666;
+        text-transform: uppercase;
+      }
+      .event-log-item .value {
+        font-weight: bold;
+        color: #0066cc;
+        font-size: 18px;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎵 MIDI Player Seek & Visualizer Auto-Update Test</h1>
+    
+    <div class="test-section">
+      <h2>✨ Seek Event & Visualizer Update Test</h2>
+      <div class="info">
+        <strong>📝 Test Description:</strong><br>
+        This test demonstrates the new seek event functionality. When you drag the seek bar or click on it to seek to a different position, the visualizer should automatically update to show the note that is playing at that position (or clear the highlight if no note is playing).
+      </div>
+
+      <div class="test-instructions">
+        <strong>🎯 How to test:</strong>
+        <ol>
+          <li>Let the music play for a few seconds, then pause it</li>
+          <li>Drag the seek bar to different positions (especially to silent areas)</li>
+          <li>Watch the piano-roll visualizer - the highlighted note should change as you seek</li>
+          <li>If you seek to a position with no notes, the highlight should clear</li>
+          <li>Check the debug logs below to see all 'seek' events being triggered</li>
+        </ol>
+      </div>
+      
+      <midi-player
+        src="./jazz.mid"
+        sound-font
+        visualizer="#jazzVisualizer">
+      </midi-player>
+      <midi-visualizer type="piano-roll" id="jazzVisualizer"></midi-visualizer>
+      
+      <div class="event-log">
+        <div class="event-log-item">
+          <h3>Current Time</h3>
+          <div class="value" id="currentTime">0.00s</div>
+        </div>
+        <div class="event-log-item">
+          <h3>Last Event</h3>
+          <div class="value" id="lastEvent">-</div>
+        </div>
+        <div class="event-log-item">
+          <h3>Note at Position</h3>
+          <div class="value" id="noteAtPos">-</div>
+        </div>
+      </div>
+      
+      <div class="status">
+        Status: <span id="status1">Loading...</span>
+      </div>
+      
+      <div class="debug-log" id="debugLog1"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>🥁 Drums with Large Gaps - Seek Test</h2>
+      <div class="info">
+        <strong>📝 Test Description:</strong><br>
+        Drums have significant silence between hits. This test verifies that seeking into these silent areas clears the visualizer highlight properly, and seeking back to a note shows the correct note highlighted.
+      </div>
+
+      <div class="test-instructions">
+        <strong>🎯 How to test:</strong>
+        <ol>
+          <li>Seek to different drum hits and pause</li>
+          <li>Observe the visualizer highlighting the active drum note</li>
+          <li>Seek to the gaps between drums - the highlight should clear</li>
+          <li>The debug log shows all seek events with their timestamps</li>
+        </ol>
+      </div>
+      
+      <midi-player
+        src="./drums.mid"
+        sound-font
+        visualizer="#drumsVisualizer">
+      </midi-player>
+      <midi-visualizer type="piano-roll" id="drumsVisualizer"></midi-visualizer>
+      
+      <div class="event-log">
+        <div class="event-log-item">
+          <h3>Current Time</h3>
+          <div class="value" id="currentTime2">0.00s</div>
+        </div>
+        <div class="event-log-item">
+          <h3>Last Event</h3>
+          <div class="value" id="lastEvent2">-</div>
+        </div>
+        <div class="event-log-item">
+          <h3>Note at Position</h3>
+          <div class="value" id="noteAtPos2">-</div>
+        </div>
+      </div>
+      
+      <div class="status">
+        Status: <span id="status2">Loading...</span>
+      </div>
+      
+      <div class="debug-log" id="debugLog2"></div>
+    </div>
+    <script>
+      function addLog(elementId, message) {
+        const log = document.getElementById(elementId);
+        const timestamp = new Date().toLocaleTimeString('en-US', { 
+          hour12: false, 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          second: '2-digit'
+        });
+        const line = document.createElement('div');
+        line.textContent = `[${timestamp}] ${message}`;
+        log.appendChild(line);
+        while (log.children.length > 25) {
+          log.removeChild(log.firstChild);
+        }
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function getNoteName(midiNote) {
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const octave = Math.floor(midiNote / 12) - 1;
+        const note = notes[midiNote % 12];
+        return note + octave;
+      }
+
+      window.addEventListener('DOMContentLoaded', function() {
+        const players = document.querySelectorAll('midi-player');
+        
+        players.forEach((player, index) => {
+          const playerId = index + 1;
+          const logId = `debugLog${playerId}`;
+          const statusId = `status${playerId}`;
+          const currentTimeId = `currentTime${playerId === 1 ? '' : playerId}`;
+          const lastEventId = `lastEvent${playerId === 1 ? '' : playerId}`;
+          const noteAtPosId = `noteAtPos${playerId === 1 ? '' : playerId}`;
+          let positionUpdateInterval;
+
+          const updateTimeDisplay = () => {
+            document.getElementById(currentTimeId).textContent = player.currentTime.toFixed(2) + 's';
+          };
+
+          player.addEventListener('load', () => {
+            addLog(logId, `✓ MIDI file loaded. Duration: ${player.duration.toFixed(2)}s`);
+            document.getElementById(statusId).textContent = '✓ Ready to play';
+          });
+
+          player.addEventListener('start', () => {
+            addLog(logId, `► Playback started`);
+            document.getElementById(statusId).textContent = '▶ Playing';
+            document.getElementById(lastEventId).textContent = 'START';
+            positionUpdateInterval = setInterval(updateTimeDisplay, 100);
+          });
+
+          player.addEventListener('note', (event) => {
+            const note = event.detail.note;
+            const noteInfo = `pitch=${note.pitch} (${getNoteName(note.pitch)})`;
+            addLog(logId, `♪ Note: ${noteInfo}, startTime=${note.startTime.toFixed(3)}s`);
+            document.getElementById(noteAtPosId).textContent = noteInfo;
+          });
+
+          player.addEventListener('seek', (event) => {
+            const seekTime = event.detail.time;
+            addLog(logId, `🎯 SEEK: Moved to ${seekTime.toFixed(2)}s`);
+            document.getElementById(lastEventId).textContent = 'SEEK';
+            updateTimeDisplay();
+          });
+
+          player.addEventListener('stop', () => {
+            clearInterval(positionUpdateInterval);
+            addLog(logId, `⏹ Playback stopped at ${player.currentTime.toFixed(2)}s`);
+            document.getElementById(statusId).textContent = '⏹ Stopped';
+            document.getElementById(lastEventId).textContent = 'STOP';
+          });
+
+          player.addEventListener('loop', () => {
+            addLog(logId, `🔁 Looped back to start`);
+            document.getElementById(lastEventId).textContent = 'LOOP';
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

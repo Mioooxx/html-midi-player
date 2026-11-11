@@ -7,7 +7,8 @@ import {VisualizerElement} from './visualizer';
 
 
 export type NoteEvent = CustomEvent<{note: NoteSequence.INote}>;
-const VISUALIZER_EVENTS = ['start', 'stop', 'note'] as const;
+export type SeekEvent = CustomEvent<{time: number}>;
+const VISUALIZER_EVENTS = ['start', 'stop', 'note', 'seek'] as const;
 const DEFAULT_SOUNDFONT = 'https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus';
 
 let playingPlayer: PlayerElement = null;
@@ -40,6 +41,7 @@ let playingPlayer: PlayerElement = null;
  * @fires stop - The player has stopped playing
  * @fires loop - The player has automatically restarted playback after reaching the end
  * @fires note - A note starts
+ * @fires seek - The user has seeked to a new position (detail: {time: number})
  *
  * @csspart control-panel - `<div>` containing all the controls
  * @csspart play-button - Play button
@@ -117,6 +119,8 @@ export class PlayerElement extends HTMLElement {
           this.startPositionUpdate(time);
         }
       }
+      // Dispatch seek event for visualizers to update
+      this.dispatchEvent(new CustomEvent('seek', {detail: {time}}));
       this.seeking = false;
     });
 
@@ -282,6 +286,15 @@ export class PlayerElement extends HTMLElement {
       start: () => { visualizer.noteSequence = this.noteSequence; },
       stop: () => { visualizer.clearActiveNotes(); },
       note: (event: NoteEvent) => { visualizer.redraw(event.detail.note); },
+      seek: (event: SeekEvent) => {
+        // When user seeks, find the note at that time and highlight it
+        const note = this.getNoteAtTime(event.detail.time);
+        if (note) {
+          visualizer.redraw(note);
+        } else {
+          visualizer.clearActiveNotes();
+        }
+      },
     } as const;
     for (const name of VISUALIZER_EVENTS) {
       this.addEventListener(name, listeners[name]);
@@ -356,6 +369,39 @@ export class PlayerElement extends HTMLElement {
     }
   }
 
+  /**
+   * Find the note that should be highlighted at the given time.
+   * Uses binary search for efficiency.
+   * Returns the note if one is currently playing at that time, null otherwise.
+   */
+  protected getNoteAtTime(time: number): NoteSequence.INote | null {
+    if (!this.ns || !this.ns.notes || this.ns.notes.length === 0) {
+      return null;
+    }
+
+    // Binary search to find notes around this time
+    let left = 0;
+    let right = this.ns.notes.length - 1;
+    let result: NoteSequence.INote | null = null;
+
+    while (left <= right) {
+      const mid = Math.floor((left + right) / 2);
+      const note = this.ns.notes[mid];
+      const endTime = note.endTime;
+
+      if (note.startTime <= time && time < endTime) {
+        // Found a note playing at this time
+        result = note;
+        break;
+      } else if (time < note.startTime) {
+        right = mid - 1;
+      } else {
+        left = mid + 1;
+      }
+    }
+
+    return result;
+  }
 
   protected handleStop(finished = false) {
     // Stop the position update loop
