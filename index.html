@@ -2,44 +2,59 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>HTML MIDI Player</title>
+    <title>HTML MIDI Player Test</title>
 
     <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.0/es6/core.js"></script>
     <script src="./dist/midi-player.min.js"></script>
 
     <style>
-      #player2::part(control-panel) {
-        background: #ff5;
-        border: 2px solid #000;
-        border-radius: 10px;
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .player-section {
+        margin-bottom: 40px;
+        border: 1px solid #ccc;
+        padding: 20px;
+        border-radius: 5px;
+      }
+      h2 {
+        margin-top: 0;
       }
     </style>
   </head>
   <body>
-    <h1><a href="https://github.com/cifkao/html-midi-player">HTML MIDI Player</a></h1>
+    <h1>MIDI Player Test</h1>
 
-    <midi-player src="https://cdn.jsdelivr.net/gh/cifkao/html-midi-player@2b12128/jazz.mid" sound-font loop visualizer=".visualizer" id="player1"></midi-player>
-    <midi-player src="https://cdn.jsdelivr.net/gh/cifkao/html-midi-player@2b12128/twinkle_twinkle.mid" visualizer=".visualizer" id="player2"></midi-player>
+    <div class="player-section">
+      <h2>Drums</h2>
+      <midi-player
+        src="./drums.mid"
+        sound-font
+        visualizer="#drumsVisualizer">
+      </midi-player>
+      <midi-visualizer type="piano-roll" id="drumsVisualizer"></midi-visualizer>
+    </div>
 
-    <midi-visualizer type="piano-roll" class="visualizer" id="pianoRollVisualizer"></midi-visualizer>
-    <midi-visualizer type="waterfall" class="visualizer" id="waterfallVisualizer"></midi-visualizer>
-    <midi-visualizer type="staff" class="visualizer" id="staffVisualizer"></midi-visualizer>
-
-    <midi-player src="https://cdn.jsdelivr.net/gh/cifkao/html-midi-player@2b12128/notfound.mid" sound-font></midi-player>
-    <midi-player sound-font></midi-player>
+    <div class="player-section">
+      <h2>Vocal</h2>
+      <midi-player
+        src="./vocal.mid"
+        sound-font
+        visualizer="#vocalVisualizer">
+      </midi-player>
+      <midi-visualizer type="piano-roll" id="vocalVisualizer"></midi-visualizer>
+    </div>
 
     <script>
       window.addEventListener('DOMContentLoaded', function() {
         for (const player of document.querySelectorAll('midi-player')) {
           for (const event of ['load', 'start', 'stop', 'loop']) {
-            player.addEventListener(event, console.log);
+            player.addEventListener(event, (e) => {
+              console.log(`Player event: ${event}`, e);
+            });
           }
         }
-
-        const waterfallVisualizer = document.querySelector('#waterfallVisualizer');
-        waterfallVisualizer.config = {
-          showOnlyOctavesUsed: true
-        };
       });
     </script>
   </body>
