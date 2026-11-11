@@ -46,6 +46,16 @@
       <midi-visualizer type="piano-roll" id="vocalVisualizer"></midi-visualizer>
     </div>
 
+    <div class="player-section">
+      <h2>Guitar</h2>
+      <midi-player
+        src="./guitar.mid"
+        sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
+        visualizer="#guitarVisualizer">
+      </midi-player>
+      <midi-visualizer type="piano-roll" id="guitarVisualizer"></midi-visualizer>
+    </div>
+
     <script>
       window.addEventListener('DOMContentLoaded', function() {
         for (const player of document.querySelectorAll('midi-player')) {
