@@ -1,0 +1,7 @@
+- 绝对不要创建、生成或写入任何 .md (Markdown) 文件。
+- 如果需要做计划、记录笔记或输出说明，请直接在对话框中回复，不要生成新的文件。
+
+When using the search_files tool:
+1. NEVER search globally across the entire workspace.
+2. Always restrict your search to specific subdirectories (e.g., `src/`, `Source/`).
+3. Exclude dependency folders, build directories, and third-party libraries from your search paths.

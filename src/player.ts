@@ -65,6 +65,9 @@ export class PlayerElement extends HTMLElement {
   protected ns: INoteSequence = null;
   protected _playing = false;
   protected seeking = false;
+  protected playbackStartTime: number = 0;  // Web Audio API time when playback started
+  protected playbackStartOffset: number = 0;  // MIDI time offset when playback started
+  protected positionUpdateInterval: number = null;  // Update loop interval ID
 
   static get observedAttributes() { return ['sound-font', 'src', 'visualizer']; }
 
@@ -110,6 +113,8 @@ export class PlayerElement extends HTMLElement {
           if (this.player.getPlayState() === 'paused') {
             this.player.resume();
           }
+          // Restart position tracking from the new seek position
+          this.startPositionUpdate(time);
         }
       }
       this.seeking = false;
@@ -247,6 +252,10 @@ export class PlayerElement extends HTMLElement {
             } else {
               this.dispatchEvent(new CustomEvent('loop'));
             }
+            
+            // Start tracking playback position
+            this.startPositionUpdate(offset);
+            
             await promise;
             this.handleStop(true);
           } catch (error) {
@@ -300,7 +309,58 @@ export class PlayerElement extends HTMLElement {
     this.displayCurrentTime(note.startTime);
   }
 
+  protected startPositionUpdate(startOffset: number) {
+    // Clear any existing interval
+    this.stopPositionUpdate();
+    
+    // Get the Web Audio API time when playback starts
+    // Use Tone.js's now() method to get consistent timing
+    const ToneClass = (this.player.constructor as any).tone;
+    if (ToneClass && ToneClass.now) {
+      this.playbackStartTime = ToneClass.now();
+    } else {
+      this.playbackStartTime = performance.now() / 1000;
+    }
+    this.playbackStartOffset = startOffset;
+    
+    // Update position every 100ms while playing
+    this.positionUpdateInterval = window.setInterval(() => {
+      if (!this.playing || this.seeking) {
+        return;
+      }
+      
+      // Calculate elapsed time since playback started
+      const ToneClass = (this.player.constructor as any).tone;
+      let elapsedTime: number;
+      if (ToneClass && ToneClass.now) {
+        elapsedTime = ToneClass.now() - this.playbackStartTime;
+      } else {
+        elapsedTime = (performance.now() / 1000) - this.playbackStartTime;
+      }
+      
+      // Calculate current playback position
+      const currentPosition = this.playbackStartOffset + elapsedTime;
+      
+      // Update seek bar and time display
+      if (currentPosition <= this.duration) {
+        this.seekBar.value = String(currentPosition);
+        this.displayCurrentTime(currentPosition);
+      }
+    }, 100);
+  }
+
+  protected stopPositionUpdate() {
+    if (this.positionUpdateInterval != null) {
+      window.clearInterval(this.positionUpdateInterval);
+      this.positionUpdateInterval = null;
+    }
+  }
+
+
   protected handleStop(finished = false) {
+    // Stop the position update loop
+    this.stopPositionUpdate();
+    
     if (finished) {
       if (this.loop) {
         this.currentTime = 0;

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>MIDI Player Position Update Test</title>
+
+    <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.0/es6/core.js"></script>
+    <script src="./dist/midi-player.min.js"></script>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .test-section {
+        margin-bottom: 30px;
+        border: 1px solid #ccc;
+        padding: 20px;
+        border-radius: 5px;
+      }
+      h1 {
+        color: #333;
+      }
+      h2 {
+        margin-top: 0;
+        color: #555;
+      }
+      .info {
+        background-color: #f0f0f0;
+        padding: 10px;
+        border-radius: 3px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .debug-log {
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        padding: 10px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        height: 200px;
+        overflow-y: auto;
+        margin-top: 10px;
+      }
+      midi-player {
+        display: block;
+        margin: 15px 0;
+      }
+      midi-visualizer {
+        display: block;
+        margin: 15px 0;
+        background-color: #f5f5f5;
+        border-radius: 3px;
+      }
+      .status {
+        font-weight: bold;
+        color: #0066cc;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎵 MIDI Player Position Update Test</h1>
+    
+    <div class="test-section">
+      <h2>Test Case: Smooth Position Updates (Jazz Music)</h2>
+      <div class="info">
+        <strong>Test Description:</strong> This test verifies that the playback position updates smoothly and continuously, not just when notes change. 
+        Watch the seek bar and time display as the music plays. They should update smoothly every 100ms, even during silent passages or between notes.
+      </div>
+      
+      <midi-player
+        src="./jazz.mid"
+        sound-font
+        visualizer="#jazzVisualizer">
+      </midi-player>
+      <midi-visualizer type="piano-roll" id="jazzVisualizer"></midi-visualizer>
+      
+      <div class="status">
+        Status: <span id="status1">Loading...</span>
+      </div>
+      
+      <div class="debug-log" id="debugLog1"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test Case: Drums with Gaps (Drums Music)</h2>
+      <div class="info">
+        <strong>Test Description:</strong> Drums often have significant silence between hits. This test ensures the position still updates smoothly 
+        during these silent periods. Look for continuous position changes in the seek bar even when no sound is playing.
+      </div>
+      
+      <midi-player
+        src="./drums.mid"
+        sound-font
+        visualizer="#drumsVisualizer">
+      </midi-player>
+      <midi-visualizer type="piano-roll" id="drumsVisualizer"></midi-visualizer>
+      
+      <div class="status">
+        Status: <span id="status2">Loading...</span>
+      </div>
+      
+      <div class="debug-log" id="debugLog2"></div>
+    </div>
+
+    <script>
+      function addLog(elementId, message) {
+        const log = document.getElementById(elementId);
+        const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+        const line = document.createElement('div');
+        line.textContent = `[${timestamp}] ${message}`;
+        log.appendChild(line);
+        // Keep only last 20 lines
+        while (log.children.length > 20) {
+          log.removeChild(log.firstChild);
+        }
+        log.scrollTop = log.scrollHeight;
+      }
+
+      window.addEventListener('DOMContentLoaded', function() {
+        const players = document.querySelectorAll('midi-player');
+        
+        players.forEach((player, index) => {
+          const playerId = index + 1;
+          const logId = `debugLog${playerId}`;
+          const statusId = `status${playerId}`;
+          let lastLoggedTime = -1;
+
+          // Track position updates every 500ms for logging
+          let positionCheckInterval;
+
+          player.addEventListener('load', () => {
+            addLog(logId, `✓ MIDI file loaded. Duration: ${player.duration.toFixed(2)}s`);
+            document.getElementById(statusId).textContent = '✓ Ready to play';
+          });
+
+          player.addEventListener('start', () => {
+            addLog(logId, `► Playback started`);
+            document.getElementById(statusId).textContent = '▶ Playing';
+            
+            // Check position every 500ms to verify it's updating
+            positionCheckInterval = setInterval(() => {
+              const currentTime = player.currentTime;
+              if (lastLoggedTime === -1 || currentTime - lastLoggedTime >= 0.5) {
+                addLog(logId, `Position: ${currentTime.toFixed(2)}s / ${player.duration.toFixed(2)}s`);
+                lastLoggedTime = currentTime;
+              }
+            }, 500);
+          });
+
+          player.addEventListener('note', (event) => {
+            const note = event.detail.note;
+            addLog(logId, `♪ Note: pitch=${note.pitch}, startTime=${note.startTime.toFixed(3)}s`);
+          });
+
+          player.addEventListener('stop', () => {
+            clearInterval(positionCheckInterval);
+            addLog(logId, `⏹ Playback stopped`);
+            document.getElementById(statusId).textContent = '⏹ Stopped';
+          });
+
+          player.addEventListener('loop', () => {
+            addLog(logId, `🔁 Looped back to start`);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
