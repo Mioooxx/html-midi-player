@@ -6,3 +6,4 @@ yarn-error.log*
 dist
 *.md
 *.mp3
+*.json

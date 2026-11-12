@@ -30,7 +30,7 @@
       <h2>Drums</h2>
       <midi-player
         src="./drums.mid"
-        sound-font
+        sound-font="./sgm"
         visualizer="#drumsVisualizer">
       </midi-player>
       <midi-visualizer type="piano-roll" id="drumsVisualizer"></midi-visualizer>
@@ -40,7 +40,7 @@
       <h2>Vocal</h2>
       <midi-player
         src="./vocal.mid"
-        sound-font
+        sound-font="./sgm"
         visualizer="#vocalVisualizer">
       </midi-player>
       <midi-visualizer type="piano-roll" id="vocalVisualizer"></midi-visualizer>
@@ -50,10 +50,20 @@
       <h2>Guitar</h2>
       <midi-player
         src="./guitar.mid"
-        sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
+        sound-font="./sgm"
         visualizer="#guitarVisualizer">
       </midi-player>
       <midi-visualizer type="piano-roll" id="guitarVisualizer"></midi-visualizer>
+    </div>
+
+    <div class="player-section">
+      <h2>Lovely - Billie Eilish feat. Khalid</h2>
+      <midi-player
+        src="./lovely-billie-eilish-feat-khalid-vocal-duetpianoviolindrums.mid"
+        sound-font="./sgm"
+        visualizer="#lovelyVisualizer">
+      </midi-player>
+      <midi-visualizer type="piano-roll" id="lovelyVisualizer"></midi-visualizer>
     </div>
 
     <script>
